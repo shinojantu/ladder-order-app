@@ -1,0 +1,29 @@
+import streamlit as st
+import pandas as pd
+
+st.title("Ladder Order TP/SL Planner")
+
+base_price = st.number_input("Base Entry Price (USDT)", min_value=1.0, value=59000.0, step=10.0)
+steps = st.number_input("Number of Ladder Steps", min_value=1, max_value=50, value=10, step=1)
+price_gap = st.number_input("Price Gap Between Steps (USDT)", min_value=0.1, value=50.0)
+order_qty = st.number_input("Quantity per Order (USDT)", min_value=1.0, value=30.0)
+tp_percent = st.slider("Take-Profit %", 0.1, 10.0, 2.0)
+sl_percent = st.slider("Stop-Loss %", 0.1, 20.0, 5.0)
+
+if st.button("Generate Ladder Orders"):
+    orders = []
+    for i in range(steps):
+        entry = base_price - i * price_gap
+        tp = round(entry * (1 + tp_percent / 100), 2)
+        sl = round(entry * (1 - sl_percent / 100), 2)
+        orders.append({
+            "Step": i + 1,
+            "Entry Price": round(entry, 2),
+            f"TP Price (+{tp_percent}%)": tp,
+            f"SL Price (-{sl_percent}%)": sl,
+            "Qty (USDT)": order_qty
+        })
+
+    df = pd.DataFrame(orders)
+    st.dataframe(df)
+    st.download_button("Download CSV", df.to_csv(index=False), file_name="ladder_orders.csv")
